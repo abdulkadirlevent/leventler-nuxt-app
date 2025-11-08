@@ -1,15 +1,18 @@
 <script lang="ts" setup>
+import {h, resolveComponent} from 'vue'
 import {upperFirst} from "scule";
-import type {BreadcrumbItem, TableColumn, Pla} from '@nuxt/ui'
+import type {BreadcrumbItem, TableColumn, TableRow} from '@nuxt/ui'
 import {getPaginationRowModel} from '@tanstack/table-core'
 import type {Row} from '@tanstack/table-core'
 import type {Project} from '~/types'
+import AppFooter from "~/components/AppFooter.vue";
+import {navigateTo} from "#app";
 
 definePageMeta({
 // Giriş yapmış kullanıcılar için
   middleware: 'auth'
 })
-const Placeholder = resolveComponent('Placeholder')
+
 const UAvatar = resolveComponent('UAvatar')
 const UButton = resolveComponent('UButton')
 const UBadge = resolveComponent('UBadge')
@@ -18,7 +21,7 @@ const UCheckbox = resolveComponent('UCheckbox')
 
 const toast = useToast()
 const table = useTemplateRef('table')
-
+const isLoading = ref(true)
 const columnFilters = ref([{
   id: 'title',
   value: ''
@@ -32,8 +35,13 @@ const columnVisibility = ref({
   due_date: true,
   status: true,
 })
-const rowSelection = ref({/*1: true*/})
-const isLoading = ref(true)
+// const rowSelection = ref({/*1: true*/})
+const rowSelection = ref<Record<string, boolean>>({})
+
+function onSelect(e: Event, row: TableRow<Project>) {
+  /* If you decide to also select the column you can do this  */
+  row.toggleSelected(!row.getIsSelected())
+}
 
 function getRowItems(row: Row<Project>) {
   return [
@@ -97,7 +105,7 @@ const columns: TableColumn<Project>[] = [
   {
     id: 'actions',
     header: 'İşlemler',
-    meta: {class: {th: 'w-20', td: 'w-20'}},
+    meta: {class: {th: 'w-20 text-center', td: 'w-20 text-center'}},
     cell: ({row}) => {
       return h('div', {class: 'text-center'},
           h(
@@ -120,29 +128,28 @@ const columns: TableColumn<Project>[] = [
   },
   {
     id: 'select',
-    meta: {class: {th: 'w-20 p-0 m-0', td: 'w-20 m-0 p-0'}},
-    header: ({table}) => {
-      return h(UCheckbox, {
-        class: 'justify-center min-w-20',
-        'modelValue': table.getIsSomePageRowsSelected()
-            ? 'indeterminate'
-            : table.getIsAllPageRowsSelected(),
-        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
-            table.toggleAllPageRowsSelected(!!value),
-        'ariaLabel': 'Select all'
-      })
-    },
+    meta: {class: {th: 'w-20 text-center p-0 m-0', td: 'w-20 text-center m-0 p-0'}},
+    header: ({table}) =>
+        h(UCheckbox, {
+          class: 'justify-center min-w-20',
+          modelValue: table.getIsSomePageRowsSelected()
+              ? 'indeterminate'
+              : table.getIsAllPageRowsSelected(),
+          'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
+              table.toggleAllPageRowsSelected(!!value),
+          'aria-label': 'Select all'
+        }),
     cell: ({row}) =>
         h(UCheckbox, {
           class: 'justify-center',
-          'modelValue': row.getIsSelected(),
+          modelValue: row.getIsSelected(),
           'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
           'ariaLabel': 'Select row'
         })
   },
   {
     accessorKey: 'id',
-    meta: {class: {th: 'w-20 text-center', td: 'w-20 text-center'}},
+    meta: {class: {th: 'w-32 text-left', td: 'w-32 text-left'}},
     header: ({column}) => {
       const isSorted = column.getIsSorted()
       return h('div', {class: 'flex items-center justify-center'},
@@ -163,6 +170,7 @@ const columns: TableColumn<Project>[] = [
   },
   {
     accessorKey: 'title',
+    meta: {class: {th: 'text-left', td: 'text-left'}},
     header: ({column}) => {
       const isSorted = column.getIsSorted()
       return h(UButton, {
@@ -191,7 +199,7 @@ const columns: TableColumn<Project>[] = [
 
             h(UAvatar, {
               size: 'lg',
-              src: row.original?.profile_avatar_url? avatarUrl : 'https://i.pravatar.cc/150?u=a042581f4e29026704d',
+              src: row.original?.profile_avatar_url ? avatarUrl : 'https://i.pravatar.cc/150?u=a042581f4e29026704d',
               class: 'rounded-full'
             }),
             h('div', undefined, [
@@ -205,7 +213,6 @@ const columns: TableColumn<Project>[] = [
     accessorKey: 'description',
     header: ({column}) => {
       const isSorted = column.getIsSorted()
-
       return h(UButton, {
         color: 'neutral',
         variant: 'link',
@@ -274,7 +281,7 @@ const columns: TableColumn<Project>[] = [
   {
     accessorKey: 'status',
     filterFn: 'equals',
-    meta: {class: {th: 'text-center w-20 ', td: 'text-center w-20'}},
+    meta: {class: {th: 'w-20 text-center', td: 'w-20 text-center'}},
     header: ({column}) => {
       const isSorted = column.getIsSorted()
       return h(UButton, {
@@ -298,9 +305,9 @@ const columns: TableColumn<Project>[] = [
         cancelled: 'error' as const,
         archived: 'secondary' as const,
         deleted: 'error' as const,
-      }[row.original.status]
+      }[row.getValue('status') as string]
       return h(UBadge, {class: 'capitalize', variant: 'subtle', color}, () =>
-          row.original.status
+          row.getValue('status')
       )
     }
   },
@@ -387,6 +394,22 @@ const formatDate = (dateString: string) => {
   })
 }
 
+const handleDeleteCancel = () => {
+  toast.add({title: 'Başarılı', description: `İşlem iptal edildi.`, color: 'error'})
+  rowSelection.value = {}
+}
+
+const handleDeleteSubmit = async (data: any) => {
+  try {
+    toast.add({title: 'Başarılı', description: ` ${data.count}  ${data.message}`, color: 'success'})
+    // await  navigateTo('/projects')
+    // await router.push('/projects')
+  } catch (error: any) {
+    console.error('HATA', error)
+    toast.add({title: 'Başarılı', description: `Proje oluşturulurken bir hata oluştu ${error.message} `, color: 'success'})
+  }
+}
+
 const breadcrumbsItems = ref<BreadcrumbItem[]>([
   {
     label: 'Home',
@@ -396,24 +419,27 @@ const breadcrumbsItems = ref<BreadcrumbItem[]>([
   {
     label: 'Projeler',
     icon: 'i-lucide-briefcase-business',
-    to: '/projects',
-    active: true
   },
 ])
 
 </script>
 
 <template>
-  <UDashboardPanel id="projects-page" >
+  <UDashboardPanel id="projects-page">
     <template #header>
       <UDashboardNavbar id="Projeler">
 
         <template #leading>
           <UDashboardSidebarCollapse/>
-          <UBreadcrumb :items="breadcrumbsItems" />
+          <UBreadcrumb :items="breadcrumbsItems"/>
         </template>
         <template #right>
-          <UButton icon="i-lucide-plus" label="Yeni Proje Ekle" to="/projects/new"/>
+          <UButton
+              :to="`/projects/new`"
+              color="primary"
+              icon="i-lucide-plus"
+              label="Yeni Proje Ekle"
+              variant="subtle"/>
         </template>
       </UDashboardNavbar>
 
@@ -441,7 +467,10 @@ const breadcrumbsItems = ref<BreadcrumbItem[]>([
               </UInput>
             </div>
             <div class="flex flex-wrap items-center gap-1.5">
-              <CustomersDeleteModal :count="table?.tableApi?.getFilteredSelectedRowModel().rows.length">
+              <ProjectsDeleteModal
+                  :count="table?.tableApi?.getFilteredSelectedRowModel().rows.length"
+                  @cancel="handleDeleteCancel"
+                  @submit="handleDeleteSubmit">
                 <UButton
                     v-if="table?.tableApi?.getFilteredSelectedRowModel().rows.length"
                     color="error"
@@ -454,7 +483,7 @@ const breadcrumbsItems = ref<BreadcrumbItem[]>([
                     </UKbd>
                   </template>
                 </UButton>
-              </CustomersDeleteModal>
+              </ProjectsDeleteModal>
             </div>
           </div>
         </template>
@@ -462,16 +491,16 @@ const breadcrumbsItems = ref<BreadcrumbItem[]>([
         <template #right>
           <div class="flex items-center gap-1.5">
             <USelect v-model="statusFilter"
-            :items="[
+                     :items="[
               { label: 'Tüm Durumlar', value: 'all' },
               { label: 'Beklemede', value: 'pending' },
               { label: 'Devam Ediyor', value: 'in_progress' },
               { label: 'Tamamlandı', value: 'completed' },
               { label: 'İptal Edildi', value: 'cancelled' },
             ]"
-                :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
-                class="min-w-28"
-                placeholder="Filter status"
+                     :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
+                     class="min-w-28"
+                     placeholder="Filter status"
             />
             <USelect
                 v-model="priorityFilter"
@@ -512,9 +541,9 @@ const breadcrumbsItems = ref<BreadcrumbItem[]>([
               />
             </UDropdownMenu>
             <UDrawer direction="right">
-              <UButton label="Filitre" color="primary" variant="subtle" trailing-icon="i-lucide-funnel-plus" />
+              <UButton color="primary" label="Filitre" trailing-icon="i-lucide-funnel-plus" variant="subtle"/>
               <template #content>
-                <Placeholder class="min-w-96 min-h-96 size-full m-4" />
+                <Placeholder class="min-w-96 min-h-96 size-full m-4"/>
               </template>
             </UDrawer>
           </div>
@@ -545,6 +574,7 @@ const breadcrumbsItems = ref<BreadcrumbItem[]>([
           td: 'border border-muted'
         }"
           class="shrink-0 border border-muted rounded-lg"
+          @select="onSelect"
       />
 
       <div class="flex items-center justify-between gap-3 border-t border-default pt-4 mt-auto">
@@ -565,22 +595,7 @@ const breadcrumbsItems = ref<BreadcrumbItem[]>([
     </template>
 
     <template #footer>
-      <!-- ✅ Footer -->
-      <div class="flex items-center justify-between gap-2 border-t border-muted py-2 px-4">
-        <p class="text-muted text-sm">
-          Leventler Asansör • © {{ new Date().getFullYear() }}
-        </p>
-        <div class="flex items-center justify-end gap-1.5">
-          <UButton
-              aria-label="GitHub"
-              color="neutral"
-              icon="simple-icons:github"
-              target="_blank"
-              to="https://abdulkadirlevent.com.tr"
-              variant="ghost"
-          />
-        </div>
-      </div>
+      <AppFooter/>
     </template>
   </UDashboardPanel>
 </template>

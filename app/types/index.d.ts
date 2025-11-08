@@ -17,11 +17,11 @@ export interface User {
 export interface Project {
   id: string
   title: string
-  description: string
+  description: string | null
   status: ProjectStatus
   priority: ProjectPriority
   image?: string
-  due_date?: string
+  due_date?: string | null
   created_at?: string,
   updated_at?: string,
   user_id?: string,

@@ -1,7 +1,8 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 import ProjectForm from "~/components/projects/ProjectForm.vue";
 import {navigateTo} from "#app";
 import type {BreadcrumbItem} from "@nuxt/ui";
+import AppFooter from "~/components/AppFooter.vue";
 
 definePageMeta({
   middleware: 'auth'
@@ -9,14 +10,14 @@ definePageMeta({
 
 const toast = useToast()
 
-const { createProject } = useProjects()
+const {createProject} = useProjects()
 const router = useRouter()
 
 const handleSubmit = async (projectData: any) => {
   try {
     await createProject(projectData)
     toast.add({title: 'Success', description: `Yeni Proje ${projectData.title} eklendi`, color: 'success'})
-    await  navigateTo('/projects')
+    await navigateTo('/projects')
     // await router.push('/projects')
   } catch (error: any) {
     alert('Proje oluşturulurken bir hata oluştu: ' + error.message)
@@ -42,7 +43,6 @@ const breadcrumbsItems = computed<BreadcrumbItem[]>(() => {
     {
       label: 'Yeni Proje',
       icon: 'i-lucide-plus',
-      to: `/projects/new`,
     },
   ];
 });
@@ -55,44 +55,29 @@ const breadcrumbsItems = computed<BreadcrumbItem[]>(() => {
       <UDashboardNavbar id="Projeler">
         <template #leading>
           <UDashboardSidebarCollapse/>
-          <UBreadcrumb :items="breadcrumbsItems" />
+          <UBreadcrumb :items="breadcrumbsItems"/>
         </template>
         <template #right>
           <UButton
-              label="Kaydet"
+              :label="'Kaydet'"
+              color="success"
               icon="i-lucide-save"
-              @click="handleSubmit"
-          />
+              variant="subtle" @click="handleSubmit"/>
         </template>
       </UDashboardNavbar>
     </template>
 
     <template #body>
       <UPageCard
-          title="Yei Proje Bilgileri"
           description="Yeni Projeler Ekleyebilir /Güncelleyebilirsiniz"
+          title="Yei Proje Bilgileri"
           variant="subtle">
-        <ProjectForm @submit="handleSubmit" @cancel="handleCancel" />
+        <ProjectForm @cancel="handleCancel" @submit="handleSubmit"/>
       </UPageCard>
     </template>
 
     <template #footer>
-      <!-- ✅ Footer -->
-      <div class="flex items-center justify-between gap-2 border-t border-muted py-2 px-4">
-        <p class="text-muted text-sm">
-          Leventler Asansör • © {{ new Date().getFullYear() }}
-        </p>
-        <div class="flex items-center justify-end gap-1.5">
-          <UButton
-              aria-label="GitHub"
-              color="neutral"
-              icon="simple-icons:github"
-              target="_blank"
-              to="https://abdulkadirlevent.com.tr"
-              variant="ghost"
-          />
-        </div>
-      </div>
+      <AppFooter/>
     </template>
   </UDashboardPanel>
 </template>

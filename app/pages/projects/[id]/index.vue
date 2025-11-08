@@ -1,7 +1,12 @@
-<script setup lang="ts">
-// Proje detay sayfası - Proje bilgilerini ve görevlerini gösterir
-import ProjectForm from "~/components/projects/ProjectForm.vue";
-import type {BreadcrumbItem} from "@nuxt/ui";
+<script lang="ts" setup>
+import type {BreadcrumbItem, NavigationMenuItem, TabsItem} from "@nuxt/ui";
+import AppFooter from "~/components/AppFooter.vue";
+import TodoForm from "~/components/todos/TodoForm.vue";
+
+import OverviewPanel from '~/components/tabs/OverviewPanel.vue'
+import TasksPanel from '~/components/tabs/TasksPanel.vue'
+import TeamPanel from '~/components/tabs/TeamPanel.vue'
+import TodoCard from "~/components/todos/TodoCard.vue";
 
 definePageMeta({
   middleware: 'auth'
@@ -9,8 +14,8 @@ definePageMeta({
 
 const route = useRoute()
 const router = useRouter()
-const { getProject } = useProjects()
-const { getTodosByProject, createTodo, deleteTodo, updateTodoStatus } = useTodos()
+const {getProject} = useProjects()
+const {getTodosByProject, createTodo, deleteTodo, updateTodoStatus} = useTodos()
 
 const project = ref<any>(null)
 const todos = ref<any[]>([])
@@ -114,10 +119,76 @@ const handleStatusChange = async (id: string, status: string) => {
   }
 }
 
+const handleDelete = async (id: string) => {
+  if (!id) {
+    alert('Geçersiz proje kimliği')
+    return
+  }
+
+  if (!confirm('Bu projeyi silmek istediğinizden emin misiniz?')) {
+    return
+  }
+
+  try {
+    // await deleteProject(id)
+    // Silindikten sonra proje listesine dön
+    // router.push('/projects')
+  } catch (err: any) {
+    alert('Proje silinirken bir hata oluştu: ' + (err?.message || String(err)))
+  }
+}
+
 onMounted(async () => {
   await loadProject()
   await loadTodos()
 })
+
+type TabKey = 'overview' | 'tasks' | 'team' | 'hakedisler'
+
+const activeTab = ref<TabKey>('overview')
+
+const links = computed<NavigationMenuItem[][]>(() => [
+  // links[0]
+  [
+    {
+      label: 'Proje Detayları',
+      icon: 'i-lucide-user',
+      class: 'capitalize cursor-pointer',
+      active: activeTab.value === 'overview',
+      onSelect: (e: Event) => activeTab.value = 'overview',
+    },
+    {
+      label: 'Tesisatlar',
+      icon: 'i-lucide-shield',
+      class: 'capitalize cursor-pointer',
+      active: activeTab.value === 'tasks',
+      onSelect: (e: Event) => activeTab.value = 'tasks',
+    },
+    {
+      label: 'Görevler',
+      icon: 'i-lucide-calendar',
+      class: 'capitalize cursor-pointer',
+      active: activeTab.value === 'team',
+      onSelect: (e: Event) => activeTab.value = 'team',
+    },
+    {
+      label: 'Hakedişler',
+      icon: 'i-lucide-bell',
+      class: 'capitalize cursor-pointer',
+      active: activeTab.value === 'hakedisler',
+      onSelect: (e: Event) => activeTab.value = 'hakedisler',
+    },
+  ],
+  // links[1]
+  [
+    {
+      label: 'Documentation',
+      icon: 'i-lucide-book-open',
+      to: 'https://ui.nuxt.com/docs/getting-started/installation/nuxt',
+      target: '_blank'
+    }
+  ]
+])
 
 const breadcrumbsItems = computed<BreadcrumbItem[]>(() => {
   return [
@@ -133,40 +204,74 @@ const breadcrumbsItems = computed<BreadcrumbItem[]>(() => {
     },
     {
       label: project.value ? `${project.value.title}` : 'Proje',
-      icon: 'i-lucide-pencil',
-      to: `/projects/${route.params.id}/edit`,
+      icon: 'i-lucide-eye',
+      // to: `/projects/${route.params.id}`,
+      class: 'capitalize',
     },
   ];
 });
 
+const componentsMap = {
+  overview: OverviewPanel,
+  tasks: TasksPanel,
+  team: TeamPanel,
+  hakedisler: OverviewPanel,
+} as const
+
 </script>
 
 <template>
-
   <UDashboardPanel id="projects-page">
     <template #header>
       <UDashboardNavbar id="Projeler">
         <template #leading>
           <UDashboardSidebarCollapse/>
-          <UBreadcrumb :items="breadcrumbsItems" v-if="project" />
+          <UBreadcrumb v-if="project" :items="breadcrumbsItems"/>
         </template>
         <template #right>
           <UButton
-              icon="i-lucide-save"
-              label="Kaydet"
-              @click="handleSubmit"
-          />
+              color="error"
+              icon="i-lucide-trash"
+              label="Sil"
+              variant="outline"
+              class="cursor-pointer"
+              @click="handleDelete(`${route.params.id}`)"/>
+          <UButton
+              :to="`/projects/${route.params.id}/edit`"
+              color="info"
+              icon="i-lucide-pencil"
+              label="Düzenle"
+              variant="outline"/>
+          <UButton
+              :to="`/projects/new`"
+              color="primary"
+              icon="i-lucide-plus"
+              label="Yeni Proje Ekle"
+              variant="subtle"/>
         </template>
       </UDashboardNavbar>
+      <UDashboardToolbar>
+        <UNavigationMenu :items="links" class="-mx-1 flex-1" highlight/>
+      </UDashboardToolbar>
     </template>
 
     <template #body>
-      <UPageCard
-          description="Projeler Güncelleyebilirsiniz"
-          title="Proje Güncelleme"
-          variant="subtle">
 
-        <div  class="project-detail-page">
+      <div class="">
+        <Transition mode="out-in" name="fade">
+          <KeepAlive>
+            <component :is="componentsMap[activeTab]" :key="activeTab"/>
+          </KeepAlive>
+        </Transition>
+      </div>
+
+      <!-- Proje detay Bölümü -->
+      <UCard v-if="false" variant="subtle">
+        <template #header>
+          <div>Proje detay</div>
+        </template>
+
+        <div class="project-detail-page">
           <div v-if="loading" class="loading">Yükleniyor...</div>
 
           <div v-else-if="error" class="alert alert-error">
@@ -195,82 +300,189 @@ const breadcrumbsItems = computed<BreadcrumbItem[]>(() => {
                   </div>
                 </div>
                 <div class="header-actions">
-                  <NuxtLink :to="`/projects/${project.value.id}/edit`" class="btn btn-secondary">
+                  <NuxtLink class="btn btn-secondary" to="/">
                     Düzenle
                   </NuxtLink>
-                  <NuxtLink to="/projects" class="btn btn-outline">
+                  <NuxtLink class="btn btn-outline" to="/projects">
                     ← Geri
                   </NuxtLink>
                 </div>
               </div>
             </div>
 
-            <!-- Görevler Bölümü -->
-            <div class="todos-section">
-              <div class="section-header">
-                <h2>Görevler</h2>
-                <button @click="showAddForm = !showAddForm" class="btn btn-primary">
-                  {{ showAddForm ? 'İptal' : '+ Yeni Görev' }}
-                </button>
-              </div>
-
-              <!-- Yeni Görev Formu -->
-              <div v-if="showAddForm" class="add-todo-form">
-                <TodoForm
-                    :project-id="project.id"
-                    @submit="handleCreateTodo"
-                    @cancel="showAddForm = false"
-                />
-              </div>
-
-              <!-- Görevler Listesi -->
-              <div v-if="todosLoading" class="loading">Görevler yükleniyor...</div>
-
-              <div v-else-if="todosError" class="alert alert-error">
-                {{ todosError }}
-              </div>
-
-              <div v-else-if="todos.length === 0" class="empty-state">
-                <p>Henüz görev eklenmemiş.</p>
-                <button @click="showAddForm = true" class="btn btn-primary">
-                  İlk Görevinizi Oluşturun
-                </button>
-              </div>
-
-              <div v-else class="todos-grid">
-                <TodoCard
-                    v-for="todo in todos"
-                    :key="todo.id"
-                    :todo="todo"
-                    :project-id="project.id"
-                    @delete="handleDeleteTodo"
-                    @status-change="handleStatusChange"
-                />
-              </div>
-            </div>
           </div>
         </div>
 
-      </UPageCard>
+        <template #footer>
+          <div>Footer</div>
+        </template>
+      </UCard>
+
+      <!-- Tesisatlar Bölümü -->
+      <UCard v-if="false" variant="subtle">
+        <template #header>
+          <div>Tesisatlar</div>
+        </template>
+
+        <div class="todos-section">
+          <div class="section-header">
+            <h2>Görevler</h2>
+            <button class="btn btn-primary" @click="showAddForm = !showAddForm">
+              {{ showAddForm ? 'İptal' : '+ Yeni Görev' }}
+            </button>
+          </div>
+
+          <!-- Yeni Görev Formu -->
+          <div v-if="showAddForm" class="add-todo-form">
+            <TodoForm
+                :project-id="project.id"
+                @cancel="showAddForm = false"
+                @submit="handleCreateTodo"
+            />
+          </div>
+
+          <!-- Görevler Listesi -->
+          <div v-if="todosLoading" class="loading">Görevler yükleniyor...</div>
+
+          <div v-else-if="todosError" class="alert alert-error">
+            {{ todosError }}
+          </div>
+
+          <div v-else-if="todos.length === 0" class="empty-state">
+            <p>Henüz görev eklenmemiş.</p>
+            <button class="btn btn-primary" @click="showAddForm = true">
+              İlk Görevinizi Oluşturun
+            </button>
+          </div>
+
+          <div v-else class="todos-grid">
+            <TodoCard
+                v-for="todo in todos"
+                :key="todo.id"
+                :project-id="project.id"
+                :todo="todo"
+                @delete="handleDeleteTodo"
+                @status-change="handleStatusChange"
+            />
+          </div>
+        </div>
+
+        <template #footer>
+          <div>Footer</div>
+        </template>
+      </UCard>
+
+      <!-- Görevler Bölümü -->
+      <UCard v-if="false" variant="subtle">
+        <template #header>
+          <div>Görevler</div>
+        </template>
+
+        <div class="todos-section">
+          <div class="section-header">
+            <h2>Görevler</h2>
+            <button class="btn btn-primary" @click="showAddForm = !showAddForm">
+              {{ showAddForm ? 'İptal' : '+ Yeni Görev' }}
+            </button>
+          </div>
+
+          <!-- Yeni Görev Formu -->
+          <div v-if="showAddForm" class="add-todo-form">
+            <TodoForm
+                :project-id="project.id"
+                @cancel="showAddForm = false"
+                @submit="handleCreateTodo"
+            />
+          </div>
+
+          <!-- Görevler Listesi -->
+          <div v-if="todosLoading" class="loading">Görevler yükleniyor...</div>
+
+          <div v-else-if="todosError" class="alert alert-error">
+            {{ todosError }}
+          </div>
+
+          <div v-else-if="todos.length === 0" class="empty-state">
+            <p>Henüz görev eklenmemiş.</p>
+            <button class="btn btn-primary" @click="showAddForm = true">
+              İlk Görevinizi Oluşturun
+            </button>
+          </div>
+
+          <div v-else class="todos-grid">
+            <TodoCard
+                v-for="todo in todos"
+                :key="todo.id"
+                :project-id="project.id"
+                :todo="todo"
+                @delete="handleDeleteTodo"
+                @status-change="handleStatusChange"
+            />
+          </div>
+        </div>
+
+        <template #footer>
+          <div>Footer</div>
+        </template>
+      </UCard>
+
+      <!-- Görevler Bölümü -->
+      <UCard v-if="false" variant="subtle">
+        <template #header>
+          <div>Hakedişler</div>
+        </template>
+
+        <div class="todos-section">
+          <div class="section-header">
+            <h2>Görevler</h2>
+            <button class="btn btn-primary" @click="showAddForm = !showAddForm">
+              {{ showAddForm ? 'İptal' : '+ Yeni Görev' }}
+            </button>
+          </div>
+
+          <!-- Yeni Görev Formu -->
+          <div v-if="showAddForm" class="add-todo-form">
+            <TodoForm
+                :project-id="project.id"
+                @cancel="showAddForm = false"
+                @submit="handleCreateTodo"
+            />
+          </div>
+
+          <!-- Görevler Listesi -->
+          <div v-if="todosLoading" class="loading">Görevler yükleniyor...</div>
+
+          <div v-else-if="todosError" class="alert alert-error">
+            {{ todosError }}
+          </div>
+
+          <div v-else-if="todos.length === 0" class="empty-state">
+            <p>Henüz görev eklenmemiş.</p>
+            <button class="btn btn-primary" @click="showAddForm = true">
+              İlk Görevinizi Oluşturun
+            </button>
+          </div>
+
+          <div v-else class="todos-grid">
+            <TodoCard
+                v-for="todo in todos"
+                :key="todo.id"
+                :project-id="project.id"
+                :todo="todo"
+                @delete="handleDeleteTodo"
+                @status-change="handleStatusChange"
+            />
+          </div>
+        </div>
+
+        <template #footer>
+          <div>Footer</div>
+        </template>
+      </UCard>
     </template>
 
     <template #footer>
-      <!-- ✅ Footer -->
-      <div class="flex items-center justify-between gap-2 border-t border-muted py-2 px-4">
-        <p class="text-muted text-sm">
-          Leventler Asansör • © {{ new Date().getFullYear() }}
-        </p>
-        <div class="flex items-center justify-end gap-1.5">
-          <UButton
-              aria-label="GitHub"
-              color="neutral"
-              icon="simple-icons:github"
-              target="_blank"
-              to="https://abdulkadirlevent.com.tr"
-              variant="ghost"
-          />
-        </div>
-      </div>
+      <AppFooter/>
     </template>
   </UDashboardPanel>
 

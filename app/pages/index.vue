@@ -34,7 +34,7 @@ const period = ref<Period>('daily')
         title="Home"
         :ui="{ right: 'gap-3' }">
         <template #leading>
-          <UDashboardSidebarCollapse/>
+          <UDashboardSidebarCollapse icon="i-lucide-menu"/>
         </template>
 
         <template #right>

@@ -2,6 +2,7 @@
 import ProjectForm from "~/components/projects/ProjectForm.vue";
 import type {BreadcrumbItem} from "@nuxt/ui";
 import type {Project} from "~/types";
+import AppFooter from "~/components/AppFooter.vue";
 
 definePageMeta({
   middleware: 'auth'
@@ -32,6 +33,7 @@ onMounted(async () => {
 
 const handleSubmit = async (projectData: any) => {
   try {
+   // const payload = stripForbiddenKeys(projectData);
     await updateProject(route.params.id as string, projectData)
     await router.push('/projects')
   } catch (err: any) {
@@ -57,9 +59,16 @@ const breadcrumbsItems = computed<BreadcrumbItem[]>(() => {
     },
     {
       label: project.value ? `${project.value.title}` : 'Proje',
-      icon: 'i-lucide-pencil',
-      to: `/projects/${route.params.id}/edit`,
+      icon: 'i-lucide-eye',
+      to: `/projects/${route.params.id}`,
+      class: 'capitalize',
     },
+    {
+      label:'düzenle',
+      icon: 'i-lucide-pencil',
+      class: 'capitalize',
+    },
+
   ];
 });
 
@@ -76,7 +85,10 @@ const breadcrumbsItems = computed<BreadcrumbItem[]>(() => {
         <template #right>
           <UButton
               icon="i-lucide-save"
-              label="Kaydet"
+              color="success"
+              label="Güncelle"
+              variant="subtle"
+              class="cursor-pointer"
               @click="handleSubmit"
           />
         </template>
@@ -102,22 +114,7 @@ const breadcrumbsItems = computed<BreadcrumbItem[]>(() => {
     </template>
 
     <template #footer>
-      <!-- ✅ Footer -->
-      <div class="flex items-center justify-between gap-2 border-t border-muted py-2 px-4">
-        <p class="text-muted text-sm">
-          Leventler Asansör • © {{ new Date().getFullYear() }}
-        </p>
-        <div class="flex items-center justify-end gap-1.5">
-          <UButton
-              aria-label="GitHub"
-              color="neutral"
-              icon="simple-icons:github"
-              target="_blank"
-              to="https://abdulkadirlevent.com.tr"
-              variant="ghost"
-          />
-        </div>
-      </div>
+      <AppFooter/>
     </template>
   </UDashboardPanel>
 </template>

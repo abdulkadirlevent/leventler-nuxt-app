@@ -64,8 +64,9 @@ const handleSubmit = async (event: FormSubmitEvent<Schema>) => {
     description: state.description || '',
     status: state.status as ProjectStatus,
     priority: state.priority as ProjectPriority,
-    due_date: state.due_date ? format(new Date(state.due_date), 'yyyy-MM-dd HH:mm:ss') : format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
+    due_date: state.due_date ? format(new Date(state.due_date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
   }
+  // await updateProject(route.params.id as string, submitData)
   emit('submit', submitData)
 }
 
@@ -73,7 +74,7 @@ const onError = async (event: FormErrorEvent) => {
   if (event?.errors?.[0]?.id) {
     const element = document.getElementById(event.errors[0].id)
     element?.focus()
-    element?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    element?.scrollIntoView({behavior: 'smooth', block: 'center'})
   }
 }
 // İptal
@@ -88,8 +89,8 @@ const handleCancel = () => {
       :schema="schema"
       :state="state"
       class="space-y-4"
-      @submit="handleSubmit"
-      @error="onError">
+      @error="onError"
+      @submit="handleSubmit">
 
     <UFormField label="Proje Başlığı" name="title" required>
       <UInput v-model="state.title" class="w-2xl" placeholder="Proje Başlığı" required/>
@@ -116,19 +117,21 @@ const handleCancel = () => {
 
     <div class="flex items-center justify-end gap-2">
       <UButton
+          class="cursor-pointer"
           color="neutral"
+          icon="i-lucide-x"
           label="Cancel"
           variant="subtle"
-          icon="i-lucide-x"
           @click="handleCancel"
       />
+
       <UButton
           :label="project ? 'Güncelle' : 'Kaydet'"
-          color="primary"
-          type="submit"
+          class="cursor-pointer"
+          color="success"
           icon="i-lucide-save"
-          variant="solid"
-      />
+          type="submit"
+          variant="subtle"/>
     </div>
   </UForm>
 </template>

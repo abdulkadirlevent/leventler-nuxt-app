@@ -1,5 +1,6 @@
 // Projelerle ilgili işlemler için composable
 // Supabase client'ı kullanarak CRUD işlemlerini yönetir
+import type {Project} from "~/types";
 
 export const useProjects = () => {
   const supabase = useSupabaseClient()
@@ -32,9 +33,8 @@ export const useProjects = () => {
   }
 
   // Tek bir projeyi getir
-  const getProject = async (id: string) => {
+  const getProject = async (id: string): Promise<Project> => {
     const userId = await getUserId()
-
     const { data, error } = await supabase
       .from('projects')
       .select('*')
@@ -68,6 +68,7 @@ export const useProjects = () => {
     if (error) throw error
     return data
   }
+
 
   // Proje güncelle
   const updateProject = async (id: string, updates: {

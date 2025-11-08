@@ -4,12 +4,13 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
     '@nuxt/ui',
-    '@vueuse/nuxt',
-    '@nuxt/icon',
-    '@pinia/nuxt',
     '@nuxtjs/supabase',
+    '@nuxt/eslint',
+    '@nuxt/image',
+    '@nuxt/icon',
+    '@vueuse/nuxt',
+    '@pinia/nuxt',
   ],
-
   // Supabase yapılandırması
   // URL ve Key değerleri .env dosyasından okunur, yoksa burada tanımlanan varsayılan değerler kullanılır
   supabase: {
@@ -48,9 +49,26 @@ export default defineNuxtConfig({
   // CSS ayarları
   css: ['~/assets/css/main.css'],
 
+  // Sourcemap’i kapatın (uyarıyı susturur, ama debug haritanız olmaz):
+  vite: {
+    server: {
+      hmr: {
+        // Ağa yayınlanan adresinizi yazın (örn. bilgisayarınızın LAN IP’si)
+        host: '192.168.1.50',
+        port: 24678,         // veya boşta bir port
+        // Eğer kurumsal proxy/HTTPS karmaşığı varsa:
+        // clientPort: 443,
+        // protocol: 'wss'
+      },
+    },
+    build: { sourcemap: false },
+    // dev sırasında da kapatmak için
+    css: { devSourcemap: false },
+  },
+
   routeRules: {
     '/api/**': {cors: false},
-    '/docs': { redirect: '/docs/getting-started', prerender: false },
+    // '/docs': { redirect: '/docs/getting-started', prerender: false },
   },
 
   compatibilityDate: '2024-07-11',

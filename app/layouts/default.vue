@@ -45,20 +45,30 @@ onMounted(async () => {
   }
 
   toast.add({
-    title: 'We use first-party cookies to enhance your experience on our website.',
+    title: 'Çerez kullanımını onaylayın',
+    description:'Web sitemizdeki deneyiminizi geliştirmek için birinci taraf çerezleri kullanıyoruz.',
+    // icon: 'i-lucide-info',
     duration: 0,
-    close: false,
+    close: {
+      color: 'primary',
+      variant: 'outline',
+      class: 'rounded-full'
+    },
+    color: 'success',
     actions: [{
-      label: 'Accept',
-      color: 'neutral',
+      label: 'Kabul et',
+      color: 'success',
       variant: 'outline',
       onClick: () => {
         cookie.value = 'accepted'
       }
     }, {
-      label: 'Opt out',
-      color: 'neutral',
-      variant: 'ghost'
+      label: 'Vazgeç ve devam et',
+      color: 'error',
+      variant: 'outline',
+      onClick: () => {
+        cookie.value = null
+      }
     }]
   })
 })
@@ -73,11 +83,12 @@ onMounted(async () => {
       v-model:collapsed="collapsed"
       collapsible
       resizable
+      side="right"
       class="bg-elevated/25"
-      :ui="{ footer: 'lg:border-t lg:border-default' }">
-      <template #header="{ collapsed: isCollapsed }">
-            <AppLogo v-if="!isCollapsed" class="h-8 w-auto shrink-0" />
-            <UIcon v-else  name="i-lucide-circle-ellipsis" class="size-8 text-primary cursor-pointer" @click="collapsed=false"/>
+      :ui="{ footer: 'lg:border-t lg:border-default'}">
+      <template #header="{ collapsed: isCollapsed }" class="flex items-center justify-center">
+            <AppLogo v-if="!isCollapsed" class="h-8 w-auto shrink-0 cursor-pointer" @click="navigateTo('/')" />
+            <UIcon v-else  name="i-lucide-circle-ellipsis" class="h-6 w-6 text-primary mx-auto cursor-pointer" @click="collapsed=false"/>
       </template>
 
       <template #default="{ collapsed: isCollapsed }">
@@ -104,6 +115,7 @@ onMounted(async () => {
         <UserMenu :collapsed="collapsed" />
       </template>
     </UDashboardSidebar>
+
     <!-- Search -->
     <UDashboardSearch :groups="groups" />
     <!-- Main slot (page content) -->
