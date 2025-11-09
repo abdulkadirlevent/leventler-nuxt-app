@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { NavigationMenuItem } from '@nuxt/ui'
+const { loggedIn, user, session, fetch, clear, openInPopup } = useUserSession()
 
 const route = useRoute()
 const toast = useToast()
@@ -112,7 +113,16 @@ onMounted(async () => {
       </template>
 
       <template #footer="{ collapsed }">
-        <UserMenu :collapsed="collapsed" />
+        <UserMenu v-if="loggedIn" :collapsed="collapsed" />
+        <UButton
+            v-else
+            :label="collapsed ? '' : 'Login with GitHub'"
+            icon="i-simple-icons-github"
+            color="neutral"
+            variant="ghost"
+            class="w-full"
+            @click="openInPopup('/auth/github')"
+        />
       </template>
     </UDashboardSidebar>
 

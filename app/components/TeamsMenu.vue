@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import type { DropdownMenuItem } from '@nuxt/ui'
+import { CreateTeamModal } from '#components'
+
 
 defineProps<{
   collapsed?: boolean
 }>()
+
+const overlay = useOverlay()
+const modal = overlay.create(CreateTeamModal)
 
 const teams = ref([{
   label: 'Leventler',
@@ -34,7 +39,10 @@ const items = computed<DropdownMenuItem[][]>(() => {
     }
   })), [{
     label: 'Create team',
-    icon: 'i-lucide-circle-plus'
+    icon: 'i-lucide-circle-plus',
+    onSelect: () => {
+      modal.open()
+    }
   }, {
     label: 'Manage teams',
     icon: 'i-lucide-cog'
@@ -46,8 +54,7 @@ const items = computed<DropdownMenuItem[][]>(() => {
   <UDropdownMenu
     :items="items"
     :content="{ align: 'center', collisionPadding: 12 }"
-    :ui="{ content: collapsed ? 'w-40' : 'w-(--reka-dropdown-menu-trigger-width)' }"
-  >
+    :ui="{ content: collapsed ? 'w-40' : 'w-(--reka-dropdown-menu-trigger-width)' }">
     <UButton
       v-bind="{
         ...selectedTeam,
@@ -61,9 +68,7 @@ const items = computed<DropdownMenuItem[][]>(() => {
       :square="collapsed"
       class="data-[state=open]:bg-elevated"
       :class="[!collapsed && 'py-2']"
-      :ui="{
-        trailingIcon: 'text-dimmed'
-      }"
+      :ui="{trailingIcon: 'text-dimmed'}"
     />
   </UDropdownMenu>
 </template>

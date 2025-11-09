@@ -29,6 +29,7 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+
 })
 
 const handleSubmit = async (projectData: any) => {

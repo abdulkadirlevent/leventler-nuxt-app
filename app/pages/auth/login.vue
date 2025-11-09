@@ -48,21 +48,69 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>
 
-async function onSubmit(payload: FormSubmitEvent<Schema>) {
+async function onSubmit222(payload: FormSubmitEvent<Schema>) {
   console.log('Gönderildi', payload)
   try {
     loading.value = true
     message.value = ''
-    await signIn(payload.data.email, payload.data.password);
+    const loginUser = await signIn(payload.data.email, payload.data.password);
     message.value = 'Giriş başarılı! Yönlendiriliyorsunuz...'
     toast.add({title: 'Tamamlandı', description: `${message.value}`, color: 'success'})
     // Kullanıcı durumunun güncellenmesi için kısa bir bekleme
     // await new Promise(resolve => setTimeout(resolve, 2000))
     // navigateTo('/projects');
-    await new Promise(r => setTimeout(() => r(navigateTo('/projects')), 2000))
+
+    await setUserSession(event, {
+      user: {
+        id: loginUser.user?.id,
+        githubId: loginUser.user?.id,
+        name: loginUser.user?.user_metadata.full_name,
+        email:loginUser.user?.email,
+        avatar: loginUser.user?.user_metadata.avatar_url,
+      }
+    })
+
+    await new Promise(r => setTimeout(() => r(navigateTo('/')), 2000))
   } catch (error: any) {
     message.value = error.message || 'Giriş yapılırken bir hata oluştu'
     toast.add({title: 'Hata', description: `${message.value}`, color: 'error'})
+  } finally {
+    loading.value = false
+  }
+}
+
+
+// pages/login.vue veya components/LoginForm.vue
+async function onSubmit(payload: FormSubmitEvent<Schema>) {
+  try {
+    loading.value = true
+
+    // 1. Server API'ye istek at (session server'da set edilir)
+    await $fetch('/api/auth/login', {
+      method: 'POST',
+      body: {
+        email: payload.data.email,
+        password: payload.data.password
+      }
+    })
+
+    // 2. Client-side session bilgisini güncelle
+    await refreshNuxtData() // veya useUserSession composable kullanın
+
+    toast.add({
+      title: 'Tamamlandı',
+      description: 'Giriş başarılı! Yönlendiriliyorsunuz...',
+      color: 'success'
+    })
+
+    await new Promise(r => setTimeout(() => r(navigateTo('/')), 2000))
+
+  } catch (error: any) {
+    toast.add({
+      title: 'Hata',
+      description: error.data?.message || 'Giriş yapılırken bir hata oluştu',
+      color: 'error'
+    })
   } finally {
     loading.value = false
   }

@@ -1,32 +1,42 @@
 <script lang="ts" setup>
 import type {DropdownMenuItem} from '@nuxt/ui'
-import auth from "~/middleware/auth";
 
-const authUser = useSupabaseUser()
-const {signOut} = useAuth()
+const { user:nuxtAuthUser, clear } = useUserSession()
 
 defineProps<{
   collapsed?: boolean
 }>()
 
+const authUser = useSupabaseUser()
 const colorMode = useColorMode()
 const appConfig = useAppConfig()
 
 const colors = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose']
-const neutrals = ['slate', 'gray', 'zinc', 'neutral', 'stone']
+const neutrals = ['slate', 'gray', 'zinc', 'neutral', 'stone',]
 
-const user = ref({
-  name: authUser.value.email || 'Misafir',
+function getColor(color: string): string {
+  if (color === 'slate') return 'var(--ui-color-neutral-200)'
+  else if (color === 'gray') return 'var(--ui-color-neutral-300)'
+  else if (color === 'zinc') return 'var(--ui-color-neutral-500)'
+  else if (color === 'neutral') return 'var(--ui-color-neutral-600)'
+  else if (color === 'stone') return 'var(--ui-color-neutral-700)'
+  else  return 'var(--ui-color-neutral-200)'
+}
+
+const user = computed(() => ({
+  name: authUser.value?.email || 'Misafir',
   avatar: {
-    src: 'https://github.com/benjamincanac.png',
-    alt: authUser.value.email || 'Misafir',
+    src: authUser.value?.avatar || 'https://github.com/benjamincanac.png',
+    alt: authUser.value?.email || 'Misafir',
   }
-})
+}))
+
+const isAuthenticated = computed(() => !!authUser.value)
 
 const items = computed<DropdownMenuItem[][]>(() => ([[{
   type: 'label',
-  label: user.value.name,
-  avatar: user.value.avatar
+  label: user.value.name || '',
+  avatar: user.value.avatar || ''
 }], [
   {
     label: 'Profilim',
@@ -59,8 +69,8 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
           label: color,
           chip: color,
           slot: 'chip',
-          checked: appConfig.ui.colors.primary === color,
           type: 'checkbox',
+          checked: appConfig.ui.colors.primary === color,
           onSelect: (e) => {
             e.preventDefault()
             appConfig.ui.colors.primary = color
@@ -69,20 +79,19 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
       }, {
         label: 'Neutral',
         slot: 'chip',
-        chip: appConfig.ui.colors.neutral === 'neutral' ? 'old-neutral' : appConfig.ui.colors.neutral,
+        chip: getColor(appConfig.ui.colors.neutral),
         content: {
           align: 'end',
           collisionPadding: 16
         },
         children: neutrals.map(color => ({
           label: color,
-          chip: color === 'neutral' ? 'old-neutral' : color,
+          chip: getColor(color),
           slot: 'chip',
           type: 'checkbox',
           checked: appConfig.ui.colors.neutral === color,
           onSelect: (e) => {
             e.preventDefault()
-
             appConfig.ui.colors.neutral = color
           }
         }))
@@ -116,44 +125,36 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
     }]
   }],
   [
-    /*
-    {
-      label: 'Documentation',
-      icon: 'i-lucide-book-open',
-      to: 'https://ui.nuxt.com/docs/getting-started/installation/nuxt',
-      target: '_blank'
-    },
-    {
-      label: 'GitHub repository',
-      icon: 'i-simple-icons-github',
-      to: 'https://github.com/nuxt-ui-templates/dashboard',
-      target: '_blank'
-    },
-      */
-    {
-      label: 'Log out',
-      icon: 'i-lucide-log-out',
-      to: '/auth/signOut'
-    }]]))
+    isAuthenticated.value ?
+        {
+         label: 'Çıkış Yap',
+          icon: 'i-lucide-log-out',
+          class:'text-error',
+          // to: '/auth/signOut',
+          onSelect() {
+            clear()
+            navigateTo('/')
+          }
+        }
+        : {label: 'Oturum Aç', icon: 'i-lucide-log-in', to: '/auth/login', class:'text-error'},
+  ]
+]))
 </script>
 
 <template>
   <UDropdownMenu
       :content="{ align: 'center', collisionPadding: 12 }"
       :items="items"
-      :ui="{ content: collapsed ? 'w-48' : 'w-(--reka-dropdown-menu-trigger-width)' }"
-  >
+      :ui="{ content: collapsed ? 'w-48' : 'w-(--reka-dropdown-menu-trigger-width)' }">
     <UButton
         :square="collapsed"
-        :ui="{
-        trailingIcon: 'text-dimmed'
-      }"
+        :ui="{ trailingIcon: 'text-dimmed' }"
         block
         class="data-[state=open]:bg-elevated"
         color="neutral"
         v-bind="{
         ...user,
-        label: collapsed ? undefined : user?.name,
+         label: collapsed ? undefined : (user?.name || user?.username),
         trailingIcon: collapsed ? undefined : 'i-lucide-chevrons-up-down'
       }"
         variant="ghost"
@@ -162,10 +163,10 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
     <template #chip-leading="{ item }">
       <span
           :style="{
-          '--chip-light': `var(--color-${(item as any).chip}-500)`,
-          '--chip-dark': `var(--color-${(item as any).chip}-400)`
+          '--chip-light': `${(item as any).chip}`,
+          '--chip-dark': `${(item as any).chip}`
         }"
-          class="ms-0.5 size-2 rounded-full bg-(--chip-light) dark:bg-(--chip-dark)"
+          class="rounded-full ring ring-bg bg-(--chip-light) dark:bg-(--chip-dark) size-2"
       />
     </template>
   </UDropdownMenu>

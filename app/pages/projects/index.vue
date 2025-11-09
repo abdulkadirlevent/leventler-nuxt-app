@@ -1,7 +1,8 @@
 <script lang="ts" setup>
+import { computed } from 'vue'
 import {h, resolveComponent} from 'vue'
 import {upperFirst} from "scule";
-import type {BreadcrumbItem, TableColumn, TableRow} from '@nuxt/ui'
+import type {BreadcrumbItem, DropdownMenuItem, TableColumn, TableRow} from '@nuxt/ui'
 import {getPaginationRowModel} from '@tanstack/table-core'
 import type {Row} from '@tanstack/table-core'
 import type {Project} from '~/types'
@@ -35,13 +36,8 @@ const columnVisibility = ref({
   due_date: true,
   status: true,
 })
-// const rowSelection = ref({/*1: true*/})
-const rowSelection = ref<Record<string, boolean>>({})
-
-function onSelect(e: Event, row: TableRow<Project>) {
-  /* If you decide to also select the column you can do this  */
-  row.toggleSelected(!row.getIsSelected())
-}
+const rowSelection = ref<Record<string, boolean>>({/*1: true*/})
+const openFilterDrawer = ref(false)
 
 function getRowItems(row: Row<Project>) {
   return [
@@ -61,29 +57,17 @@ function getRowItems(row: Row<Project>) {
     },
     {type: 'separator'},
     {
-      label: 'Proje ayrıntılarını görüntüle',
+      label: 'Görüntüle',
       icon: 'i-lucide-eye',
       to: `/projects/${row.original.id}`,
-      onSelect() {
-        toast.add({
-          title: 'Proje ödemeleri',
-          description: 'Proje ödemelerini gösteriliyor...',
-          icon: 'i-lucide-eye'
-        })
-      },
+      onSelect() {},
     },
     {type: 'separator'},
     {
-      label: 'Proje ayrıntılarını düzenle',
+      label: 'Düzenle',
       icon: 'i-lucide-pencil',
       to: `/projects/${row.original.id}/edit`,
-      onSelect() {
-        toast.add({
-          title: 'Proje ayrıntılarını',
-          description: 'Proje ayrıntılarını gösteriliyor...',
-          icon: 'i-lucide-list'
-        })
-      }
+      onSelect() {}
     },
     {type: 'separator'},
     {
@@ -131,17 +115,14 @@ const columns: TableColumn<Project>[] = [
     meta: {class: {th: 'w-20 text-center p-0 m-0', td: 'w-20 text-center m-0 p-0'}},
     header: ({table}) =>
         h(UCheckbox, {
-          class: 'justify-center min-w-20',
           modelValue: table.getIsSomePageRowsSelected()
               ? 'indeterminate'
               : table.getIsAllPageRowsSelected(),
-          'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
-              table.toggleAllPageRowsSelected(!!value),
+          'onUpdate:modelValue': (value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value),
           'aria-label': 'Select all'
         }),
     cell: ({row}) =>
         h(UCheckbox, {
-          class: 'justify-center',
           modelValue: row.getIsSelected(),
           'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
           'ariaLabel': 'Select row'
@@ -344,7 +325,29 @@ watch(() => priorityFilter.value, (newVal) => {
 
 const pagination = ref({
   pageIndex: 0,
-  pageSize: 10
+  pageSize: 5
+})
+
+const currentPage = ref(1)
+
+watchEffect(() => {
+  const idx = table?.value?.tableApi?.getState().pagination.pageIndex ?? 0
+  currentPage.value = idx + 1
+})
+
+function onPageChange(p: number) {
+  table?.value?.tableApi?.setPageIndex(Math.max(0, p - 1))
+}
+
+// Sayfa boyutu değiştiğinde tabloyu yenile ve ilk sayfaya dön
+watch(() => pagination.value.pageSize, (newSize) => {
+  // UTable iç durumu ile senkronize et
+  const api = table?.value?.tableApi
+  if (!api) return
+  pagination.value.pageIndex=0
+  api.setPageSize(newSize)
+  api.setPageIndex(0)
+  console.log('pagination.value.pageSize', pagination.value.pageSize)
 })
 
 const {getProjects, deleteProject} = useProjects()
@@ -422,6 +425,16 @@ const breadcrumbsItems = ref<BreadcrumbItem[]>([
   },
 ])
 
+const itemsPageSize = ref<DropdownMenuItem[]>([
+  {label: '5', onSelect: (e: Event) => pagination.value.pageSize = 5},
+  {label: '10', onSelect: (e: Event) => pagination.value.pageSize = 10},
+  {label: '20', onSelect: (e: Event) => pagination.value.pageSize = 20},
+  {label: '50', onSelect: (e: Event) => pagination.value.pageSize = 50},
+  {label: '100', onSelect: (e: Event) => pagination.value.pageSize = 100},
+  {label: '250', onSelect: (e: Event) => pagination.value.pageSize = 250},
+  {label: '500', onSelect: (e: Event) => pagination.value.pageSize = 500},
+  {label: '1000', onSelect: (e: Event) => pagination.value.pageSize = 1000},
+])
 </script>
 
 <template>
@@ -430,9 +443,10 @@ const breadcrumbsItems = ref<BreadcrumbItem[]>([
       <UDashboardNavbar id="Projeler">
 
         <template #leading>
-          <UDashboardSidebarCollapse/>
+          <UDashboardSidebarCollapse icon="i-lucide-menu" />
           <UBreadcrumb :items="breadcrumbsItems"/>
         </template>
+
         <template #right>
           <UButton
               :to="`/projects/new`"
@@ -540,10 +554,23 @@ const breadcrumbsItems = ref<BreadcrumbItem[]>([
                   variant="outline"
               />
             </UDropdownMenu>
-            <UDrawer direction="right">
+            <UDrawer
+                v-model:open="openFilterDrawer"
+                description="Filtreleme ile arama yapabilirsiniz."
+                direction="right"
+                title="Filtreleme alanı">
               <UButton color="primary" label="Filitre" trailing-icon="i-lucide-funnel-plus" variant="subtle"/>
-              <template #content>
-                <Placeholder class="min-w-96 min-h-96 size-full m-4"/>
+              <template #body>
+                <div class="min-w-[360px] size-full"> MERHABA</div>
+              </template>
+              <template #footer>
+                <UButton
+                    class="justify-center cursor-pointer"
+                    color="primary"
+                    icon="i-lucide-funnel"
+                    label="Filtrele"
+                    variant="outline"
+                    @click="openFilterDrawer = false"/>
               </template>
             </UDrawer>
           </div>
@@ -552,48 +579,62 @@ const breadcrumbsItems = ref<BreadcrumbItem[]>([
     </template>
 
     <template #body>
+      <div class="flex-1 overflow-y-auto flex flex-col h-full">
+        <div class="flex flex-col h-full gap-2">
+          <div class="flex-1 min-h-0">
+            <div class="overflow-y-auto h-full">
+              <div class="relative rounded overflow-auto [&::-webkit-scrollbar-thumb]:bg-transparent border border-gray-300 dark:border-gray-700 h-full flex-1 min-h-full">
+                <UTable
+                    v-if="projects"
+                    ref="table"
+                    v-model:column-filters="columnFilters"
+                    v-model:column-visibility="columnVisibility"
+                    v-model:pagination="pagination"
+                    v-model:row-selection="rowSelection"
+                    :columns="columns"
+                    :data="projects"
+                    :loading="isLoading"
+                    :pagination-options="{getPaginationRowModel: getPaginationRowModel()}"/>
+              </div>
+            </div>
+          </div>
 
-      <UTable
-          v-if="projects"
-          ref="table"
-          v-model:column-filters="columnFilters"
-          v-model:column-visibility="columnVisibility"
-          v-model:pagination="pagination"
-          v-model:row-selection="rowSelection"
-          :columns="columns"
-          :data="projects"
-          :loading="isLoading"
-          :pagination-options="{
-          getPaginationRowModel: getPaginationRowModel()
-        }"
-          :ui="{
-          base: 'table-fixed',
-          thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
-          tbody: '[&>tr]:last:[&>td]:border-b-0',
-          th: 'py-2 border border-muted ',
-          td: 'border border-muted'
-        }"
-          class="shrink-0 border border-muted rounded-lg"
-          @select="onSelect"
-      />
+          <div
+              class="overflow-x-auto overflow-y-hidden whitespace-nowrap w-full border border-gray-200 dark:border-gray-700/50 bg-gray-50 dark:bg-gray-800/50 py-3 md:px-4 px-3 rounded">
+            <div class="flex flex-row items-center justify-between w-full">
+              <div class="flex flex-row items-center gap-2 text-sm">Toplam: 11.018.541,22 ₺</div>
+            </div>
+          </div>
 
-      <div class="flex items-center justify-between gap-3 border-t border-default pt-4 mt-auto">
-        <div class="text-sm text-muted">
-          {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length || 0 }} of
-          {{ table?.tableApi?.getFilteredRowModel().rows.length || 0 }} row(s) selected.
-        </div>
+          <div
+              class="border border-gray-200 dark:border-gray-700/50 min-h-[49px] flex-shrink-0 flex items-center overflow-x-auto px-4 py-2  bg-gray-100 rounded-lg dark:bg-gray-800/50">
+            <div class="flex items-center justify-between gap-3 mt-auto">
+              <div class="text-sm text-muted">
+                Toplam {{ table?.tableApi?.getFilteredRowModel().rows.length || 0 }} kayıt.
+              </div>
+              <div v-if="table?.tableApi?.getFilteredSelectedRowModel().rows.length" class="text-sm text-muted">
+                Seçilen {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length || 0 }}
+              </div>
+              <div class="flex items-center gap-1.5">
 
-        <div class="flex items-center gap-1.5">
-          <UPagination
-              :default-page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"
-              :items-per-page="table?.tableApi?.getState().pagination.pageSize"
-              :total="table?.tableApi?.getFilteredRowModel().rows.length"
-              @update:page="(p: number) => table?.tableApi?.setPageIndex(p - 1)"
-          />
+                <UDropdownMenu
+                    :items="itemsPageSize"
+                    :ui="{ content: '', align: 'end' }">
+                  <UButton :label="String(pagination.pageSize)" color="neutral" variant="outline" class="text-center" />
+                </UDropdownMenu>
+
+                <UPagination
+                    :page="currentPage"
+                    :items-per-page="table?.tableApi?.getState().pagination.pageSize"
+                    :total="table?.tableApi?.getFilteredRowModel().rows.length"
+                    @update:page="onPageChange"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </template>
-
     <template #footer>
       <AppFooter/>
     </template>

@@ -7,6 +7,8 @@ import OverviewPanel from '~/components/tabs/OverviewPanel.vue'
 import TasksPanel from '~/components/tabs/TasksPanel.vue'
 import TeamPanel from '~/components/tabs/TeamPanel.vue'
 import TodoCard from "~/components/todos/TodoCard.vue";
+import UsersPanel from "~/components/tabs/UsersPanel.vue";
+import CalisanlarPanel from "~/components/tabs/CalisanlarPanel.vue";
 
 definePageMeta({
   middleware: 'auth'
@@ -143,7 +145,7 @@ onMounted(async () => {
   await loadTodos()
 })
 
-type TabKey = 'overview' | 'tasks' | 'team' | 'hakedisler'
+type TabKey = 'overview' | 'tasks' | 'team' | 'hakedisler' | 'calisanlar'
 
 const activeTab = ref<TabKey>('overview')
 
@@ -178,6 +180,14 @@ const links = computed<NavigationMenuItem[][]>(() => [
       active: activeTab.value === 'hakedisler',
       onSelect: (e: Event) => activeTab.value = 'hakedisler',
     },
+    {
+      label: 'Çalışanlar',
+      icon: 'i-lucide-people',
+      class: 'capitalize cursor-pointer',
+      active: activeTab.value === 'calisanlar',
+      onSelect: (e: Event) => activeTab.value = 'calisanlar',
+    }
+
   ],
   // links[1]
   [
@@ -215,7 +225,8 @@ const componentsMap = {
   overview: OverviewPanel,
   tasks: TasksPanel,
   team: TeamPanel,
-  hakedisler: OverviewPanel,
+  hakedisler: UsersPanel,
+  calisanlar: CalisanlarPanel,
 } as const
 
 </script>

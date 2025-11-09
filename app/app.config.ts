@@ -32,46 +32,11 @@ export default defineAppConfig({
         // checkbox
         checkbox: {
             slots: {
-                root: 'inline-flex items-center gap-2 select-none',
-                base: [
-                    'rounded-full ring ring-inset ring-accented overflow-hidden ',
-                    'relative flex items-center justify-center',
-                    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary focus-visible:ring-2 focus-visible:ring-primary/40',
-                    'data-[disabled=true]:opacity-50 data-[disabled=true]:cursor-not-allowed',
-                    // checked durumunda
-                    'data-[checked=true]:bg-primary data-[checked=true]:border-primary',
-                ].join(' '),
-                input: 'peer',
-                icon: 'i-lucide-check dark:text-[#202225ff] text-white ',
-                label: 'text-sm text-foreground',
-                description: 'text-xs text-muted-foreground',
-                hint: 'text-xs text-muted-foreground',
+                root: 'inline-flex items-center select-none',
+                base: 'dark:bg-[#0e1726ff]',
             },
             // Varyantlar (renk, boyut, yuvarlaklık)
             variants: {
-                color: {
-                    primary: {
-                        base: 'data-[checked=true]:bg-primary data-[checked=true]:border-primary',
-                        icon: 'text-white'
-                    },
-                    neutral: {
-                        base: 'data-[checked=true]:bg-neutral-600 data-[checked=true]:border-neutral-600',
-                        icon: 'text-white'
-                    },
-                    success: {
-                        base: 'data-[checked=true]:bg-emerald-600 data-[checked=true]:border-emerald-600',
-                    },
-                    danger: {
-                        base: 'data-[checked=true]:bg-rose-600 data-[checked=true]:border-rose-600',
-                    }
-                },
-                size: {
-                    xs: {base: 'size-4', input: 'size-3', icon: 'size-2'},   // 16px, 12px, 8px
-                    sm: {base: 'size-5', input: 'size-4', icon: 'size-3'},   // 20px, 16px, 12px
-                    md: {base: 'size-6', input: 'size-5', icon: 'size-4'},   // 24px, 20px, 16px
-                    lg: {base: 'size-7', input: 'size-6', icon: 'size-5'},   // 28px, 24px, 20px
-                    xl: {base: 'size-8', input: 'size-7', icon: 'size-6'},   // 32px, 28px, 24px
-                },
                 rounded: {
                     none: {base: 'rounded-none'},
                     sm: {base: 'rounded-sm'},
@@ -124,5 +89,17 @@ export default defineAppConfig({
                 right: 'flex items-center gap-1.5',
             }
         },
+        // table[&>tr]:last:[&>td]:border-b-0
+        table: {
+            slots: {
+                root: 'overflow-auto shrink-0 border border-muted rounded-lg',
+                base: 'min-w-full table-fixed border-spacing-0 rounded-md border border-muted',
+                thead: '[&>tr]:bg-muted [&>tr]:after:content-none',
+                tbody: '[&>tr]:data-[selectable=true]:hover:bg-elevated/50 [&>tr]:data-[selectable=true]:focus-visible:outline-primary',
+                tr: 'data-[selected=true]:bg-elevated/50',
+                th: 'px-4 py-3.5 min-w-20 text-sm text-highlighted text-left rtl:text-right font-semibold [&:has([role=checkbox])]:pe-0 border border-muted',
+                td: 'p-4 text-sm text-muted whitespace-nowrap [&:has([role=checkbox])]:pe-0 border border-muted',
+            },
+        }
     },
 })

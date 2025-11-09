@@ -4,6 +4,7 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
     '@nuxt/ui',
+    'nuxt-auth-utils',
     '@nuxtjs/supabase',
     '@nuxt/eslint',
     '@nuxt/image',

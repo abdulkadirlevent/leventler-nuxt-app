@@ -56,6 +56,14 @@ Locally preview production build:
 ```bash
 pnpm preview
 ```
+## Sık kullanılan yardımcılar
+```js
+  // Hata yönlendirme 
+  if (error) {
+    throw createError({ statusCode: 500, statusMessage: 'Üzgünüz bir hata oluştu.', message: 'Lütfen daha sonra tekrar deneyin.', fatal: true })
+  }
+```
+
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
 

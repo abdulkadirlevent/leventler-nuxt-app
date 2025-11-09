@@ -5,15 +5,19 @@ export type SaleStatus = 'paid' | 'failed' | 'refunded'
 
 export type ProjectStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled'
 export type ProjectPriority = 'low' | 'medium' | 'high'
+/*
 export interface User {
   id: number
   name: string
   email: string
+  username: string
   avatar?: AvatarProps
   status: UserStatus
   location: string
+  provider: 'github'
+  providerId: number
 }
-
+*/
 export interface Project {
   id: string
   title: string
@@ -75,3 +79,5 @@ export interface Range {
   start: Date
   end: Date
 }
+
+export type CreateTeamSchema = z.output<typeof createTeamSchema>

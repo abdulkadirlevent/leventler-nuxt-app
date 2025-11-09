@@ -9,7 +9,7 @@ const customers: User[] = [
             src: 'https://i.pravatar.cc/128?u=1'
         },
         status: 'subscribed',
-        location: 'New York, USA'
+        location: 'New York, USA',
     },
     {
         id: 2,

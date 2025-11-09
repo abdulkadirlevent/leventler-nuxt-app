@@ -73,6 +73,7 @@ function getRowItems(row: Row<User>) {
 const columns: TableColumn<User>[] = [
   {
     id: 'select',
+    meta: {class: {th: 'w-20 text-center p-0 m-0', td: 'w-20 text-center m-0 p-0'}},
     header: ({ table }) =>
       h(UCheckbox, {
         'modelValue': table.getIsSomePageRowsSelected()
@@ -91,11 +92,40 @@ const columns: TableColumn<User>[] = [
   },
   {
     accessorKey: 'id',
-    header: 'ID'
+    meta: {class: {th: 'w-20 text-center', td: 'w-20 text-center'}},
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'Id',
+        icon: isSorted
+            ? isSorted === 'asc'
+                ? 'i-lucide-arrow-up-narrow-wide'
+                : 'i-lucide-arrow-down-wide-narrow'
+            : 'i-lucide-arrow-up-down',
+        class: 'w-full cursor-pointer',
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+    },
   },
   {
     accessorKey: 'name',
-    header: 'Name',
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'Name',
+        icon: isSorted
+            ? isSorted === 'asc'
+                ? 'i-lucide-arrow-up-narrow-wide'
+                : 'i-lucide-arrow-down-wide-narrow'
+            : 'i-lucide-arrow-up-down',
+        class: 'w-full cursor-pointer',
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+    },
     cell: ({ row }) => {
       return h('div', { class: 'flex items-center gap-3' }, [
         h(UAvatar, {
@@ -113,7 +143,6 @@ const columns: TableColumn<User>[] = [
     accessorKey: 'email',
     header: ({ column }) => {
       const isSorted = column.getIsSorted()
-
       return h(UButton, {
         color: 'neutral',
         variant: 'ghost',
@@ -123,20 +152,49 @@ const columns: TableColumn<User>[] = [
             ? 'i-lucide-arrow-up-narrow-wide'
             : 'i-lucide-arrow-down-wide-narrow'
           : 'i-lucide-arrow-up-down',
-        class: '-mx-2.5',
+        class: 'w-full cursor-pointer',
         onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
       })
-    }
+    },
   },
   {
     accessorKey: 'location',
-    header: 'Location',
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'Location',
+        icon: isSorted
+            ? isSorted === 'asc'
+                ? 'i-lucide-arrow-up-narrow-wide'
+                : 'i-lucide-arrow-down-wide-narrow'
+            : 'i-lucide-arrow-up-down',
+        class: 'w-full cursor-pointer',
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+    },
     cell: ({ row }) => row.original.location
   },
   {
     accessorKey: 'status',
-    header: 'Status',
     filterFn: 'equals',
+    meta: {class: {th: 'w-20 text-center', td: 'w-20 text-center'}},
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'Status',
+        icon: isSorted
+            ? isSorted === 'asc'
+                ? 'i-lucide-arrow-up-narrow-wide'
+                : 'i-lucide-arrow-down-wide-narrow'
+            : 'i-lucide-arrow-up-down',
+        class: 'w-full cursor-pointer',
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+    },
     cell: ({ row }) => {
       const color = {
         subscribed: 'success' as const,
@@ -151,16 +209,14 @@ const columns: TableColumn<User>[] = [
   },
   {
     id: 'actions',
+    meta: {class: {th: 'w-20 text-center', td: 'w-20 text-center'}},
+    header: 'Actions',
     cell: ({ row }) => {
-      return h(
-        'div',
-        { class: 'text-right' },
+      return h('div', { class: 'text-center' },
         h(
           UDropdownMenu,
           {
-            content: {
-              align: 'end'
-            },
+            content: {align: 'end'},
             items: getRowItems(row)
           },
           () =>
@@ -195,6 +251,8 @@ const pagination = ref({
   pageIndex: 0,
   pageSize: 10
 })
+
+
 </script>
 
 <template>
@@ -209,49 +267,56 @@ const pagination = ref({
           <CustomersAddModal />
         </template>
       </UDashboardNavbar>
-    </template>
 
-    <template #body>
-      <div class="flex flex-wrap items-center justify-between gap-1.5">
-        <UInput
-          :model-value="(table?.tableApi?.getColumn('email')?.getFilterValue() as string)"
-          class="max-w-sm"
-          icon="i-lucide-search"
-          placeholder="Filter emails..."
-          @update:model-value="table?.tableApi?.getColumn('email')?.setFilterValue($event)"
-        />
+      <UDashboardToolbar>
+        <template #left>
+          <div class="flex items-center justify-between gap-1.5 w-full">
+            <div class="relative inline-flex items-center max-w-sm">
+              <UInput
+                  :model-value="(table?.tableApi?.getColumn('email')?.getFilterValue() as string)"
+                  class="max-w-sm"
+                  icon="i-lucide-search"
+                  placeholder="Filter emails..."
+                  @update:model-value="table?.tableApi?.getColumn('email')?.setFilterValue($event)"
+              />
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <CustomersDeleteModal :count="table?.tableApi?.getFilteredSelectedRowModel().rows.length">
+                <UButton
+                    v-if="table?.tableApi?.getFilteredSelectedRowModel().rows.length"
+                    label="Delete"
+                    color="error"
+                    variant="subtle"
+                    icon="i-lucide-trash"
+                >
+                  <template #trailing>
+                    <UKbd>
+                      {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length }}
+                    </UKbd>
+                  </template>
+                </UButton>
+              </CustomersDeleteModal>
+            </div>
+          </div>
+        </template>
+        <template #right>
+          <div class="flex flex-wrap items-center gap-1.5">
 
-        <div class="flex flex-wrap items-center gap-1.5">
-          <CustomersDeleteModal :count="table?.tableApi?.getFilteredSelectedRowModel().rows.length">
-            <UButton
-              v-if="table?.tableApi?.getFilteredSelectedRowModel().rows.length"
-              label="Delete"
-              color="error"
-              variant="subtle"
-              icon="i-lucide-trash"
-            >
-              <template #trailing>
-                <UKbd>
-                  {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length }}
-                </UKbd>
-              </template>
-            </UButton>
-          </CustomersDeleteModal>
 
-          <USelect
-            v-model="statusFilter"
-            :items="[
+            <USelect
+                v-model="statusFilter"
+                :items="[
               { label: 'All', value: 'all' },
               { label: 'Subscribed', value: 'subscribed' },
               { label: 'Unsubscribed', value: 'unsubscribed' },
               { label: 'Bounced', value: 'bounced' }
             ]"
-            :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
-            placeholder="Filter status"
-            class="min-w-28"
-          />
-          <UDropdownMenu
-            :items="
+                :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
+                placeholder="Filter status"
+                class="min-w-28"
+            />
+            <UDropdownMenu
+                :items="
               table?.tableApi
                 ?.getAllColumns()
                 .filter((column: any) => column.getCanHide())
@@ -267,38 +332,31 @@ const pagination = ref({
                   }
                 }))
             "
-            :content="{ align: 'end' }"
-          >
-            <UButton
-              label="Display"
-              color="neutral"
-              variant="outline"
-              trailing-icon="i-lucide-settings-2"
-            />
-          </UDropdownMenu>
-        </div>
-      </div>
+                :content="{ align: 'end' }"
+            >
+              <UButton
+                  label="Display"
+                  color="neutral"
+                  variant="outline"
+                  trailing-icon="i-lucide-settings-2"
+              />
+            </UDropdownMenu>
+          </div>
+        </template>
+      </UDashboardToolbar>
+    </template>
 
+    <template #body>
       <UTable
         ref="table"
         v-model:column-filters="columnFilters"
         v-model:column-visibility="columnVisibility"
         v-model:row-selection="rowSelection"
         v-model:pagination="pagination"
-        :pagination-options="{
-          getPaginationRowModel: getPaginationRowModel()
-        }"
-        class="shrink-0"
+        :pagination-options="{ getPaginationRowModel: getPaginationRowModel()}"
         :data="data"
         :columns="columns"
         :loading="status === 'pending'"
-        :ui="{
-          base: 'table-fixed border-separate border-spacing-0',
-          thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
-          tbody: '[&>tr]:last:[&>td]:border-b-0',
-          th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-          td: 'border-b border-default'
-        }"
       />
 
       <div class="flex items-center justify-between gap-3 border-t border-default pt-4 mt-auto">
