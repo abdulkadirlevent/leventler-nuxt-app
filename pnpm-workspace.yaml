@@ -8,3 +8,4 @@ ignoredBuiltDependencies:
 
 onlyBuiltDependencies:
   - rollup
+  - sharp

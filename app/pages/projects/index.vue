@@ -168,7 +168,11 @@ const columns: TableColumn<Project>[] = [
       })
     },
     cell: ({row}) => {
-      const avatarUrl = `https://xmgmeanyjehayuslmnjg.supabase.co/storage/v1/object/public/avatars/${row.original?.profile_avatar_url}`
+
+      const avatarUrl = row.original?.profile_avatar_url
+          ?`https://xmgmeanyjehayuslmnjg.supabase.co/storage/v1/object/public/avatars/${row.original?.profile_avatar_url}`
+          :''
+
       return h('div',
           {
             class: 'flex items-center gap-3 cursor-pointer ', onClick: () => {
@@ -180,9 +184,10 @@ const columns: TableColumn<Project>[] = [
 
             h(UAvatar, {
               size: 'lg',
-              src: row.original?.profile_avatar_url ? avatarUrl : 'https://i.pravatar.cc/150?u=a042581f4e29026704d',
+              src:  avatarUrl,
               class: 'rounded-full'
             }),
+
             h('div', undefined, [
               h('p', {class: 'font-medium text-highlighted'}, row.original?.title),
               h('p', {class: ''}, `Önem: ${row.original.priority}`)

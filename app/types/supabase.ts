@@ -57,6 +57,73 @@ export interface Database {
             referencedColumns: ["id"]
           }
         ]
+      },
+      profiles: {
+        Row: {
+          age: number | null
+          avatar_url: string | null
+          bio: string | null
+          birth_date: string | null
+          created_at: string
+          faceboook: string | null
+          gender: string | null
+          id: string
+          instagram: string | null
+          linkedin: string | null
+          location: string | null
+          twitch: string | null
+          twitter: string | null
+          updated_at: string
+          username: string | null
+          website: string | null
+          youtube: string | null
+        }
+        Insert: {
+          age?: number | null
+          avatar_url?: string | null
+          bio?: string | null
+          birth_date?: string | null
+          created_at?: string
+          faceboook?: string | null
+          gender?: string | null
+          id: string
+          instagram?: string | null
+          linkedin?: string | null
+          location?: string | null
+          twitch?: string | null
+          twitter?: string | null
+          updated_at?: string
+          username?: string | null
+          website?: string | null
+          youtube?: string | null
+        }
+        Update: {
+          age?: number | null
+          avatar_url?: string | null
+          bio?: string | null
+          birth_date?: string | null
+          created_at?: string
+          faceboook?: string | null
+          gender?: string | null
+          id?: string
+          instagram?: string | null
+          linkedin?: string | null
+          location?: string | null
+          twitch?: string | null
+          twitter?: string | null
+          updated_at?: string
+          username?: string | null
+          website?: string | null
+          youtube?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {

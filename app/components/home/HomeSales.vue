@@ -15,7 +15,10 @@ const sampleEmails = [
   'mia.white@example.com',
   'william.brown@example.com',
   'emma.davis@example.com',
-  'ethan.harris@example.com'
+  'ethan.harris@example.com',
+  'abdulkadirlevent@yahoo.com',
+  'abdulkadirlevent@hotmail.com',
+  'abdulkadirlevent@gmail.com',
 ]
 
 const { data } = await useAsyncData('sales', async () => {

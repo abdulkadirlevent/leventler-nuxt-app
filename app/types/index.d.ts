@@ -5,19 +5,19 @@ export type SaleStatus = 'paid' | 'failed' | 'refunded'
 
 export type ProjectStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled'
 export type ProjectPriority = 'low' | 'medium' | 'high'
-/*
+
 export interface User {
   id: number
   name: string
   email: string
   username: string
-  avatar?: AvatarProps
+  avatar?: AvatarProps | undefined | string
   status: UserStatus
   location: string
   provider: 'github'
   providerId: number
 }
-*/
+
 export interface Project {
   id: string
   title: string

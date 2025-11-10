@@ -20,6 +20,7 @@ const getUserId = async () => {
   }
   return authUser.id
 }
+
 const userId = await getUserId()
 
 const profileSchema = z.object({
@@ -42,13 +43,12 @@ if (data) {
   avatar_path.value = data.avatar_url
 }
 
-
 const profile = reactive<Partial<ProfileSchema>>({
   email: user.value?.email || '',
-  username: data?.username,
+  username: data?.username || '',
   website: data?.website || '',
-  avatar: data?.avatar_url || undefined,
-  bio: data?.bio || undefined
+  avatar: data?.avatar_url || '',
+  bio: data?.bio || ''
 })
 
 async function onSubmit(event: FormSubmitEvent<ProfileSchema>) {
@@ -82,8 +82,6 @@ async function onSubmit(event: FormSubmitEvent<ProfileSchema>) {
   }
 
 }
-
-
 
 async function updateProfile() {
   try {
@@ -143,12 +141,12 @@ async function signOut() {
 
     <UPageCard variant="subtle">
       <UFormField
-        name="name"
-        label="Name"
+        name="username"
+        label="Username"
         description="Tam adınız, herkese açık olarak görüntülenir."
         required>
         <UInput
-            v-model="profile.name"
+            v-model="profile.username"
             autocomplete="off"
             class="w-full"
         />

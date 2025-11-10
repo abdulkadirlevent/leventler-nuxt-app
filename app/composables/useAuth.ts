@@ -1,25 +1,10 @@
-/*
-import { useAuthStore } from '@/stores/useAuthStore';
-
-export const useAuth = () => {
-    const auth = useAuthStore();
-    return {
-        user: computed(() => auth.user),
-        login: auth.login,
-        logout: auth.logout,
-        fetchUser: auth.fetchUser
-    }
-}
-*/
-
 // Kimlik doğrulama işlemleri için composable
 // Supabase auth fonksiyonlarını sarmalar
-import type {Provider, SignInWithOAuthCredentials} from "@supabase/auth-js/src/lib/types";
-
 export const useAuth = () => {
+    const { clear } = useUserSession()
     const supabase = useSupabaseClient()
     const user = useSupabaseUser()
-
+    const toast = useToast()
     // E-posta ve şifre ile kayıt ol
     const signUp = async (name: string, email: string, password: string, phone: string) => {
         const {data, error} = await supabase.auth.signUp({
@@ -43,26 +28,67 @@ export const useAuth = () => {
 
     // E-posta ve şifre ile giriş yap
     const signIn = async (email: string, password: string) => {
-        const {data, error} = await supabase.auth.signInWithPassword({
-            email,
-            password
+        const  data  =  await $fetch('/api/auth/login', {
+            method: 'POST',
+            body: {
+                email: email,
+                password: password
+            }
         })
-        if (error) {
-            console.log('error', error)
-            throw error
-        }
+        console.log('composables-useAuth', data)
         return data
     }
 
-    // Çıkış yap
+    // signOut fonksiyonu
     const signOut = async () => {
-        const {error} = await supabase.auth.signOut()
-        if (error) {
-            console.error('error', error)
-            throw error
-        }else{
-            console.log('signOut...')
+        try {
+            // 1. Client-side Supabase session'ını kapat
+            await supabase.auth.signOut()
+
+            // 2. Server-side API call
+            await $fetch('/api/auth/logout', {
+                method: 'POST'
+            })
+
+            // 3. Local session'ı temizle
+            await clear()
+
+            // 4. Başarı mesajı
+            toast.add({
+                title: 'Çıkış Yapıldı',
+                description: 'Başarıyla çıkış yaptınız',
+                color: 'primary',
+                icon: 'i-lucide-log-out'
+            })
+
+            // 5. Login sayfasına yönlendir
+            navigateTo('/auth/login')
+
+            return { success: true }
+        } catch (error: any) {
+            console.error('Logout error:', error)
+
+            // Hata olsa bile local state'i temizle
+            await clear()
+
+            toast.add({
+                title: 'Uyarı',
+                description: 'Çıkış yapıldı ancak bir hata oluştu',
+                color: 'error'
+            })
+
+            // Yine de login sayfasına yönlendir
+            navigateTo('/auth/login')
+
+            return { success: false, error: error.message }
         }
+    }
+
+    // Hızlı çıkış (API call olmadan - offline durumlar için)
+    const quickLogout = async () => {
+        await supabase.auth.signOut()
+        await clear()
+        navigateTo('/auth/login')
     }
 
     // Şifre sıfırlama e-postası gönder
@@ -84,10 +110,7 @@ export const useAuth = () => {
         }
     }
 
-    /**
-     * @param newPassword
-     *
-     */
+    // @param newPassword
     const updatePassword = async (newPassword: string) => {
         const {data, error} = await supabase.auth.updateUser({
             password: newPassword
@@ -106,48 +129,13 @@ export const useAuth = () => {
         }
     }
 
-
-    const signinWithGoogle = async () => {
-        const auth_callback_url = `${process.env.SITE_URL}/auth/callback`
-        const {data, error} = await supabase.auth.signInWithOAuth({
-            provider: 'google' as Provider,
-            options: {
-                redirectTo: auth_callback_url,
-            },
-        })
-
-        if (error) {
-            console.log(error)
-        }
-
-        navigateTo(data.url)
-    }
-
-    const signinWithGithub = async () => {
-        const auth_callback_url = `${process.env.SITE_URL}/auth/callback`
-        const {data, error} = await supabase.auth.signInWithOAuth({
-            provider: 'github' as Provider,
-            options: {
-                redirectTo: auth_callback_url,
-            },
-        })
-
-        if (error) {
-            console.log(error)
-        }
-
-        navigateTo(data.url)
-    }
-
     return {
         user: readonly(user),
         signUp,
         signIn,
         signOut,
+        quickLogout,
         resetPassword,
         updatePassword,
-        signinWithGoogle,
-        signinWithGithub
     }
 }
-

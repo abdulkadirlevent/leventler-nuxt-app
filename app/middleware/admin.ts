@@ -1,8 +1,8 @@
 export default defineNuxtRouteMiddleware(() => {
     const toast = useToast()
-    const { user } = useAuth()
+    const { user, loggedIn } = useUserSession()
 
-    if (!user.value) {
+    if (!loggedIn) {
         return navigateTo( '/auth/login')
     }
 
@@ -11,6 +11,6 @@ export default defineNuxtRouteMiddleware(() => {
             title: 'Bu sayfaya erişim yetkiniz yok',
             color: 'error'
         })
-        return navigateTo('/settings')
+        return navigateTo('/auth/login')
     }
 })

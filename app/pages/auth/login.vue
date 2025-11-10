@@ -1,15 +1,22 @@
 <script lang="ts" setup>
 import * as z from 'zod'
-import type {AuthFormField, FormSubmitEvent} from '@nuxt/ui'
+import type {AuthFormField, ButtonProps, FormSubmitEvent} from '@nuxt/ui'
 import {useAuth} from '~/composables/useAuth';
 
-// Giriş sayfası - Kullanıcı girişi yapar
+const { user, loggedIn, openInPopup} = useUserSession()
+const route = useRoute()
+const toast = useToast()
 const {signIn} = useAuth()
-const loading = ref(false)
+
+// Reactive state
 const message = ref('')
+const hasError = ref(false)
+const errorTitle = ref('')
+const isLoading = ref(false)
 
 definePageMeta({
-  layout: 'auth'
+  layout: 'auth', // Eğer özel auth layout'unuz varsa
+  middleware: 'guest' // Giriş yapmışları ana sayfaya yönlendirir
 })
 
 useSeoMeta({
@@ -17,7 +24,6 @@ useSeoMeta({
   description: 'Devam etmek için hesabınıza giriş yapın'
 })
 
-const toast = useToast()
 const fields: AuthFormField[] = [
   {
     name: 'email',
@@ -41,69 +47,48 @@ const fields: AuthFormField[] = [
   },
 ]
 
+const providers = ref<ButtonProps[]>([
+  {
+    label: 'Google',
+    icon: 'i-simple-icons-google',
+    color: 'neutral',
+    variant: 'subtle',
+    onClick: () => {
+      openInPopup('/auth/google')
+    }
+  },
+  {
+    label: 'GitHub',
+    icon: 'i-simple-icons-github',
+    color: 'neutral',
+    variant: 'subtle',
+    onClick: async () => {
+      openInPopup('/auth/github')
+    }
+  }
+])
+
+type Schema = z.output<typeof schema>
 const schema = z.object({
   email: z.string().email("Geçersiz e-posta adresi"),
   password: z.string('Password is required').min(8, 'En az 8 karakter olmalıdır')
 })
 
-type Schema = z.output<typeof schema>
-
-async function onSubmit222(payload: FormSubmitEvent<Schema>) {
-  console.log('Gönderildi', payload)
-  try {
-    loading.value = true
-    message.value = ''
-    const loginUser = await signIn(payload.data.email, payload.data.password);
-    message.value = 'Giriş başarılı! Yönlendiriliyorsunuz...'
-    toast.add({title: 'Tamamlandı', description: `${message.value}`, color: 'success'})
-    // Kullanıcı durumunun güncellenmesi için kısa bir bekleme
-    // await new Promise(resolve => setTimeout(resolve, 2000))
-    // navigateTo('/projects');
-
-    await setUserSession(event, {
-      user: {
-        id: loginUser.user?.id,
-        githubId: loginUser.user?.id,
-        name: loginUser.user?.user_metadata.full_name,
-        email:loginUser.user?.email,
-        avatar: loginUser.user?.user_metadata.avatar_url,
-      }
-    })
-
-    await new Promise(r => setTimeout(() => r(navigateTo('/')), 2000))
-  } catch (error: any) {
-    message.value = error.message || 'Giriş yapılırken bir hata oluştu'
-    toast.add({title: 'Hata', description: `${message.value}`, color: 'error'})
-  } finally {
-    loading.value = false
-  }
-}
-
-
-// pages/login.vue veya components/LoginForm.vue
 async function onSubmit(payload: FormSubmitEvent<Schema>) {
   try {
-    loading.value = true
+    isLoading.value = true
 
-    // 1. Server API'ye istek at (session server'da set edilir)
-    await $fetch('/api/auth/login', {
-      method: 'POST',
-      body: {
-        email: payload.data.email,
-        password: payload.data.password
-      }
-    })
+    const data = await signIn(payload.data.email, payload.data.password);
 
-    // 2. Client-side session bilgisini güncelle
-    await refreshNuxtData() // veya useUserSession composable kullanın
+    console.log('data', data)
 
-    toast.add({
-      title: 'Tamamlandı',
-      description: 'Giriş başarılı! Yönlendiriliyorsunuz...',
-      color: 'success'
-    })
+    if(data.user){
+      // ÖNEMLİ: Session'ı client'ta yenile
+      const { fetch: fetchSession } = useUserSession()
+      await fetchSession()
 
-    await new Promise(r => setTimeout(() => r(navigateTo('/')), 2000))
+      await navigateTo(`/?success=true&provider=email`)
+    }
 
   } catch (error: any) {
     toast.add({
@@ -112,27 +97,50 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
       color: 'error'
     })
   } finally {
-    loading.value = false
+    isLoading.value = false
   }
 }
+
+// Hatayı manuel olarak temizle
+const clearError = () => {
+  hasError.value = false
+  errorTitle.value = ''
+  message.value = ''
+}
+
+onMounted(() => {
+  const error = route.query.error
+  const message = route.query.message as string
+})
+
+// Sadece loggedIn değiştiğinde çalışır
+watch(loggedIn, (newValue, oldValue) => {
+  if (newValue && !oldValue) { // false'dan true'ya geçtiğinde
+    toast.add({
+      title: 'Hoşgeldiniz',
+      description: `${user.value?.name || user.value?.email}`,
+      color: 'success',
+      icon: 'i-lucide-check-circle'
+    })
+    navigateTo('/')
+  }
+})
 
 </script>
 
 <template>
   <UAuthForm
-      :disabled="loading"
+      :disabled="isLoading"
       :fields="fields"
-      :loading="loading"
+      :loading="isLoading"
+      :providers="providers"
       :schema="schema"
-      :submit="{ label: loading ? 'Giriş yapılıyor...' : 'Giriş Yap', icon:'i-lucide-lock'}"
+      :submit="{ label: isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap', icon:'i-lucide-lock'}"
       class="w-full"
       icon="i-lucide-user"
       title="Tekrar hoş geldiniz"
+      separator="Providers"
       @submit="onSubmit">
-
-    <div v-if="message" :class="['alert']">
-      {{ message }}
-    </div>
 
     <template #description>
       Hesabınız yok mu?
@@ -141,6 +149,19 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
 
     <template #password-hint>
       <ULink class="text-primary font-medium" tabindex="-1" to="/auth/forgot-password">Şifremi unuttum?</ULink>
+    </template>
+
+    <template #validation>
+      <UAlert
+          v-if="hasError"
+          color="error"
+          icon="i-lucide-alert-circle"
+          :title="errorTitle || 'Error signing in'"
+          :description="message"
+          :close-button="{ icon: 'i-lucide-x', color: 'gray', variant: 'link' }"
+          @close="clearError"
+          class="mb-6"
+      />
     </template>
 
     <template #footer>

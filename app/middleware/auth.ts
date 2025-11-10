@@ -1,7 +1,6 @@
 // Kimlik doğrulama middleware'i - Giriş yapmamış kullanıcıları yönlendirir
 export default defineNuxtRouteMiddleware(async (to, from) => {
-  // const user = useSupabaseUser()
-  const { user:nuxtAuthUser } = useUserSession()
+  const { user } = useUserSession()
 
   // Herkese açık sayfalar (koruma yok)
   const publicPaths = ['/', '/auth/login', '/auth/signup', '/auth/forgot-password', '/auth/reset-password']
@@ -11,7 +10,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   // Eğer hedef herkese açık bir rota ise geçişe izin ver
   if (publicPaths.includes(to.path)) {
     // Oturum açıkken login/signup sayfalarına gidişi engellemek istiyoruz:
-    if (nuxtAuthUser.value && privatePaths.includes(to.path)) {
+    if (user.value && privatePaths.includes(to.path)) {
 
       return navigateTo('/')
     }
@@ -19,7 +18,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   }
 
   // Korunan bir sayfa ve kullanıcı yoksa login'e yönlendir (geri dönüş için redirect parametresi ekle)
-  if (!nuxtAuthUser.value) {
+  if (!user.value) {
     return navigateTo({path: '/auth/login', query: {redirect: to.fullPath}})
   }
 })

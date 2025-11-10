@@ -25,6 +25,7 @@ const range = shallowRef<Range>({
   end: new Date()
 })
 const period = ref<Period>('daily')
+
 </script>
 
 <template>
