@@ -180,17 +180,19 @@ const handleLogout = async () => {
     </template>
   </UDropdownMenu>
 
-  <UModal v-model:open="isOpen" :ui="{ footer: 'justify-end' }" title="Çıkış Yap">
+  <UModal
+      v-model:open="isOpen"
+      :ui="{ footer: 'justify-end' }"
+      description="Burada sizi bekliyor olacağız"
+      title="Çıkış Yap">
     <template #body>
       <p class="text-gray-400">
         Çıkış yapmak istediğinizden emin misiniz?
       </p>
     </template>
     <template #footer>
-      <div class="flex justify-end gap-3">
-        <UButton color="neutral" icon="i-lucide-x" variant="outline" @click="isOpen = false">İptal</UButton>
-        <UButton :loading="loading" color="success" icon="i-lucide-log-out" variant="outline" @click="handleLogout">Evet, Çıkış Yap</UButton>
-      </div>
+      <UButton color="neutral" icon="i-lucide-x" variant="outline" @click="isOpen = false">İptal</UButton>
+      <UButton :loading="loading" color="success" icon="i-lucide-log-out" variant="outline" @click="handleLogout">Evet, Çıkış Yap</UButton>
     </template>
   </UModal>
 </template>

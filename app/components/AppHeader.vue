@@ -5,20 +5,19 @@ const route = useRoute()
 
 const items = computed(() => [
   {
-    label: 'Docs',
-    to: '/docs',
-    active: route.path.startsWith('/docs')
+    label: 'Hakkımızda',
+    to: '/info/about',
+    icon: 'i-lucide-info'
   },
   {
-    label: 'Pricing',
-    to: '/pricing'
+    label: 'Banka hesaplarımız',
+    to: '/info/banka-hesaplari',
+    icon: 'i-lucide-receipt-turkish-lira'
   },
   {
-    label: 'Blog',
-    to: '/blog'
-  }, {
-    label: 'Changelog',
-    to: '/changelog'
+    label: 'İletişim',
+    to: '/info/iletisim',
+    icon: 'i-lucide-phone'
   },
 ])
 </script>
@@ -32,44 +31,32 @@ const items = computed(() => [
     </template>
 
     <UNavigationMenu
+        :active="route.path.startsWith('/auth/signup')"
         :items="items"
-        variant="link"
-    />
+        variant="link"/>
 
     <template #right>
       <UColorModeButton/>
 
       <UButton
-          class="lg:hidden"
-          color="neutral"
-          icon="i-lucide-log-in"
-          to="/login"
-          variant="ghost"
-      />
-
-      <UButton
           class="hidden lg:inline-flex"
           color="neutral"
-          label="Sign in"
-          to="/login"
+          label="Giriş yap"
+          to="/auth/login"
           variant="outline"
       />
 
       <UButton
           class="hidden lg:inline-flex"
           color="neutral"
-          label="Sign up"
-          to="/signup"
+          label="Kayıt ol"
+          to="/auth/signup"
           trailing-icon="i-lucide-arrow-right"
       />
     </template>
 
     <template #body>
-      <UNavigationMenu
-          :items="items"
-          class="-mx-2.5"
-          orientation="vertical"
-      />
+      <UNavigationMenu :items="items" class="-mx-2.5" orientation="vertical"/>
 
       <USeparator class="my-6"/>
 
@@ -77,15 +64,15 @@ const items = computed(() => [
           block
           class="mb-3"
           color="neutral"
-          label="Sign in"
-          to="/login"
+          label="Giriş yap"
+          to="/auth/login"
           variant="subtle"
       />
       <UButton
           block
           color="neutral"
-          label="Sign up"
-          to="/signup"
+          label="Kayıt ol"
+          to="/auth/signup"
       />
     </template>
   </UHeader>

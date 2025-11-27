@@ -5,7 +5,8 @@ import type {AuthFormField, FormSubmitEvent} from '@nuxt/ui'
 const {signUp} = useAuth()
 
 definePageMeta({
-  layout: 'auth'
+  layout: 'docs', // Eğer özel auth layout'unuz varsa
+  middleware: 'guest' // Giriş yapmışları ana sayfaya yönlendirir
 })
 
 useSeoMeta({
@@ -90,25 +91,29 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UAuthForm
-      :disabled="loading"
-      :fields="fields"
-      :loading="loading"
-      :schema="schema"
-      :submit="{ label: loading ? 'Bekleyiniz...' : 'Hesap oluştur', icon:'i-lucide-user' }"
-      class="w-full"
-      icon="i-lucide-user"
-      title="Tekrar hoş geldiniz"
-      @submit="onSubmit">
-    <template #description>
-      Zaten hesabınız var mı?
-      <ULink class="text-primary font-medium" to="/auth/login">Giriş yapın</ULink>
-    </template>
+  <UContainer class="flex items-center justify-center min-h-[calc(100vh-150px)]">
+    <UCard class="w-full max-w-md">
+      <UAuthForm
+          :disabled="loading"
+          :fields="fields"
+          :loading="loading"
+          :schema="schema"
+          :submit="{ label: loading ? 'Bekleyiniz...' : 'Hesap oluştur', icon:'i-lucide-user' }"
+          class="w-full"
+          icon="i-lucide-user"
+          title="Tekrar hoş geldiniz"
+          @submit="onSubmit">
+        <template #description>
+          Zaten hesabınız var mı?
+          <ULink class="text-primary font-medium" to="/auth/login">Giriş yapın</ULink>
+        </template>
 
-    <template #footer>
-      Kayıt olarak
-      <ULink class="text-primary font-medium" to="/public">Hizmet Şartlarımızı</ULink>
-      kabul etmiş olursunuz.
-    </template>
-  </UAuthForm>
+        <template #footer>
+          Kayıt olarak
+          <ULink class="text-primary font-medium" to="/public">Hizmet Şartlarımızı</ULink>
+          kabul etmiş olursunuz.
+        </template>
+      </UAuthForm>
+    </UCard>
+  </UContainer>
 </template>

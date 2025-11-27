@@ -3,7 +3,7 @@ import * as z from 'zod'
 import type {AuthFormField, ButtonProps, FormSubmitEvent} from '@nuxt/ui'
 import {useAuth} from '~/composables/useAuth';
 
-const { user, loggedIn, openInPopup} = useUserSession()
+const {user, loggedIn, openInPopup} = useUserSession()
 const route = useRoute()
 const toast = useToast()
 const {signIn} = useAuth()
@@ -15,7 +15,7 @@ const errorTitle = ref('')
 const isLoading = ref(false)
 
 definePageMeta({
-  layout: 'auth', // Eğer özel auth layout'unuz varsa
+  layout: 'docs', // Eğer özel auth layout'unuz varsa
   middleware: 'guest' // Giriş yapmışları ana sayfaya yönlendirir
 })
 
@@ -82,9 +82,9 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
 
     console.log('data', data)
 
-    if(data.user){
+    if (data.user) {
       // ÖNEMLİ: Session'ı client'ta yenile
-      const { fetch: fetchSession } = useUserSession()
+      const {fetch: fetchSession} = useUserSession()
       await fetchSession()
 
       await navigateTo(`/?success=true&provider=email`)
@@ -129,47 +129,49 @@ watch(loggedIn, (newValue, oldValue) => {
 </script>
 
 <template>
-  <UAuthForm
-      :disabled="isLoading"
-      :fields="fields"
-      :loading="isLoading"
-      :providers="providers"
-      :schema="schema"
-      :submit="{ label: isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap', icon:'i-lucide-lock'}"
-      class="w-full"
-      icon="i-lucide-user"
-      title="Tekrar hoş geldiniz"
-      separator="Providers"
-      @submit="onSubmit">
+  <UContainer class="flex items-center justify-center min-h-[calc(100vh-150px)]">
+    <UCard class="w-full max-w-md">
+      <UAuthForm
+          :disabled="isLoading"
+          :fields="fields"
+          :loading="isLoading"
+          :providers="providers"
+          :schema="schema"
+          :submit="{ label: isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap', icon:'i-lucide-lock'}"
+          class="w-full"
+          icon="i-lucide-user"
+          separator="Providers"
+          title="Tekrar hoş geldiniz"
+          @submit="onSubmit">
 
-    <template #description>
-      Hesabınız yok mu?
-      <ULink class="text-primary font-medium" to="/auth/signup">Kayıt olun</ULink>
-    </template>
+        <template #description>
+          Hesabınız yok mu?
+          <ULink class="text-primary font-medium" to="/auth/signup">Kayıt olun</ULink>
+        </template>
 
-    <template #password-hint>
-      <ULink class="text-primary font-medium" tabindex="-1" to="/auth/forgot-password">Şifremi unuttum?</ULink>
-    </template>
+        <template #password-hint>
+          <ULink class="text-primary font-medium" tabindex="-1" to="/auth/forgot-password">Şifremi unuttum?</ULink>
+        </template>
 
-    <template #validation>
-      <UAlert
-          v-if="hasError"
-          color="error"
-          icon="i-lucide-alert-circle"
-          :title="errorTitle || 'Error signing in'"
-          :description="message"
-          :close-button="{ icon: 'i-lucide-x', color: 'gray', variant: 'link' }"
-          @close="clearError"
-          class="mb-6"
-      />
-    </template>
+        <template #validation>
+          <UAlert
+              v-if="hasError"
+              :close-button="{ icon: 'i-lucide-x', color: 'gray', variant: 'link' }"
+              :description="message"
+              :title="errorTitle || 'Error signing in'"
+              class="mb-6"
+              color="error"
+              icon="i-lucide-alert-circle"
+              @close="clearError"
+          />
+        </template>
 
-    <template #footer>
-      Giriş yaparak
-      <ULink class="text-primary font-medium" to="/">Hizmet Şartlarımızı</ULink>
-      kabul etmiş olursunuz.
-    </template>
-  </UAuthForm>
-
-
+        <template #footer>
+          Giriş yaparak
+          <ULink class="text-primary font-medium" to="/">Hizmet Şartlarımızı</ULink>
+          kabul etmiş olursunuz.
+        </template>
+      </UAuthForm>
+    </UCard>
+  </UContainer>
 </template>

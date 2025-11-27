@@ -21,7 +21,7 @@ const sections = [{
   }]
 }, {
   title: 'Account updates',
-  description: 'Receive updates about Nuxt UI.',
+  description: 'Receive updates info Nuxt UI.',
   fields: [{
     name: 'weekly_digest',
     label: 'Weekly digest',
@@ -33,7 +33,7 @@ const sections = [{
   }, {
     name: 'important_updates',
     label: 'Important updates',
-    description: 'Receive emails about important updates like security fixes, maintenance, etc.'
+    description: 'Receive emails info important updates like security fixes, maintenance, etc.'
   }]
 }]
 
